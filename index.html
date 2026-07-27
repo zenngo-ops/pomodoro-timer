@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ポモドーロ・タイマー</title>
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <h1>🍅 ポモドーロ・タイマー</h1>
+
+    <div class="mode-tabs">
+      <button class="mode-btn active" data-mode="work">作業</button>
+      <button class="mode-btn" data-mode="short">短い休憩</button>
+      <button class="mode-btn" data-mode="long">長い休憩</button>
+    </div>
+
+    <div class="timer-circle">
+      <svg viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="90" />
+        <circle class="ring-progress" cx="100" cy="100" r="90" />
+      </svg>
+      <div class="time-display" id="timeDisplay">25:00</div>
+    </div>
+
+    <div class="controls">
+      <button id="startBtn">開始</button>
+      <button id="resetBtn">リセット</button>
+    </div>
+
+    <div class="cycle-info">
+      完了したポモドーロ: <span id="cycleCount">0</span>
+    </div>
+
+    <div class="task-section">
+      <h2>今日のタスク</h2>
+      <form id="taskForm">
+        <input type="text" id="taskInput" placeholder="タスクを入力..." autocomplete="off" />
+        <button type="submit">追加</button>
+      </form>
+      <ul id="taskList"></ul>
+      <div class="task-stats">
+        完了: <span id="doneCount">0</span> / <span id="totalCount">0</span>
+        <button id="clearDoneBtn" class="link-btn">完了済みを消去</button>
+      </div>
+    </div>
+  </div>
+
+  <audio id="alarmSound" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA=" preload="auto"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>
