@@ -13,6 +13,32 @@ const resetBtn = document.getElementById("resetBtn");
 const cycleCountEl = document.getElementById("cycleCount");
 const modeButtons = document.querySelectorAll(".mode-btn");
 const alarmSound = document.getElementById("alarmSound");
+const settingsBtn = document.getElementById("settingsBtn");
+const settingsPanel = document.getElementById("settingsPanel");
+const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+const workInput = document.getElementById("workInput");
+const shortInput = document.getElementById("shortInput");
+const longInput = document.getElementById("longInput");
+
+const SETTINGS_KEY = "pomodoro-durations";
+
+function loadDurations() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
+    if (saved && saved.work > 0 && saved.short > 0 && saved.long > 0) return saved;
+  } catch {
+    // 保存データが壊れている場合はデフォルト値を使う
+  }
+  return { work: 25, short: 5, long: 15 };
+}
+
+function applyDurations(minutes) {
+  MODES.work.duration = minutes.work * 60;
+  MODES.short.duration = minutes.short * 60;
+  MODES.long.duration = minutes.long * 60;
+}
+
+applyDurations(loadDurations());
 
 let currentMode = "work";
 let secondsLeft = MODES[currentMode].duration;
@@ -105,6 +131,33 @@ function toggleTimer() {
 
 modeButtons.forEach((btn) => {
   btn.addEventListener("click", () => setMode(btn.dataset.mode));
+});
+
+settingsBtn.addEventListener("click", () => {
+  const durations = loadDurations();
+  workInput.value = durations.work;
+  shortInput.value = durations.short;
+  longInput.value = durations.long;
+  settingsPanel.hidden = !settingsPanel.hidden;
+});
+
+saveSettingsBtn.addEventListener("click", () => {
+  const durations = {
+    work: Number(workInput.value),
+    short: Number(shortInput.value),
+    long: Number(longInput.value),
+  };
+  const invalidLabels = Object.entries(durations)
+    .filter(([, value]) => !(value > 0))
+    .map(([mode]) => MODES[mode].label);
+  if (invalidLabels.length > 0) {
+    alert(`${invalidLabels.join("、")}に1分以上の値を入力してください`);
+    return;
+  }
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(durations));
+  applyDurations(durations);
+  settingsPanel.hidden = true;
+  setMode(currentMode);
 });
 
 startBtn.addEventListener("click", toggleTimer);
