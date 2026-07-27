@@ -53,18 +53,35 @@ function setMode(mode) {
   updateDisplay();
 }
 
+function requestNotificationPermission() {
+  if (typeof Notification !== "undefined" && Notification.permission === "default") {
+    Notification.requestPermission();
+  }
+}
+
+function showNotification(finishedMode, nextMode) {
+  if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+  new Notification(`${MODES[finishedMode].label}終了！`, {
+    body: `次は${MODES[nextMode].label}です`,
+  });
+}
+
 function tick() {
   if (secondsLeft <= 0) {
     clearInterval(timerId);
     isRunning = false;
     startBtn.textContent = "開始";
     alarmSound.play().catch(() => {});
+    const finishedMode = currentMode;
     if (currentMode === "work") {
       const newCount = loadCycleCount() + 1;
       saveCycleCount(newCount);
       cycleCountEl.textContent = String(newCount);
-      setMode(newCount % 4 === 0 ? "long" : "short");
+      const nextMode = newCount % 4 === 0 ? "long" : "short";
+      showNotification(finishedMode, nextMode);
+      setMode(nextMode);
     } else {
+      showNotification(finishedMode, "work");
       setMode("work");
     }
     return;
@@ -79,6 +96,7 @@ function toggleTimer() {
     isRunning = false;
     startBtn.textContent = "開始";
   } else {
+    requestNotificationPermission();
     isRunning = true;
     startBtn.textContent = "一時停止";
     timerId = setInterval(tick, 1000);
