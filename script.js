@@ -19,26 +19,31 @@ const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const workInput = document.getElementById("workInput");
 const shortInput = document.getElementById("shortInput");
 const longInput = document.getElementById("longInput");
+const cycleInput = document.getElementById("cycleInput");
 
 const SETTINGS_KEY = "pomodoro-durations";
+const DEFAULT_SETTINGS = { work: 25, short: 5, long: 15, cycle: 4 };
 
-function loadDurations() {
+let sessionsPerCycle = DEFAULT_SETTINGS.cycle;
+
+function loadSettings() {
   try {
     const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY));
-    if (saved && saved.work > 0 && saved.short > 0 && saved.long > 0) return saved;
+    if (saved && saved.work > 0 && saved.short > 0 && saved.long > 0 && saved.cycle > 0) return saved;
   } catch {
     // 保存データが壊れている場合はデフォルト値を使う
   }
-  return { work: 25, short: 5, long: 15 };
+  return DEFAULT_SETTINGS;
 }
 
-function applyDurations(minutes) {
-  MODES.work.duration = minutes.work * 60;
-  MODES.short.duration = minutes.short * 60;
-  MODES.long.duration = minutes.long * 60;
+function applySettings(settings) {
+  MODES.work.duration = settings.work * 60;
+  MODES.short.duration = settings.short * 60;
+  MODES.long.duration = settings.long * 60;
+  sessionsPerCycle = settings.cycle;
 }
 
-applyDurations(loadDurations());
+applySettings(loadSettings());
 
 let currentMode = "work";
 let secondsLeft = MODES[currentMode].duration;
@@ -103,7 +108,7 @@ function tick() {
       const newCount = loadCycleCount() + 1;
       saveCycleCount(newCount);
       cycleCountEl.textContent = String(newCount);
-      const nextMode = newCount % 4 === 0 ? "long" : "short";
+      const nextMode = newCount % sessionsPerCycle === 0 ? "long" : "short";
       showNotification(finishedMode, nextMode);
       setMode(nextMode);
     } else {
@@ -134,28 +139,31 @@ modeButtons.forEach((btn) => {
 });
 
 settingsBtn.addEventListener("click", () => {
-  const durations = loadDurations();
-  workInput.value = durations.work;
-  shortInput.value = durations.short;
-  longInput.value = durations.long;
+  const settings = loadSettings();
+  workInput.value = settings.work;
+  shortInput.value = settings.short;
+  longInput.value = settings.long;
+  cycleInput.value = settings.cycle;
   settingsPanel.hidden = !settingsPanel.hidden;
 });
 
 saveSettingsBtn.addEventListener("click", () => {
-  const durations = {
+  const settings = {
     work: Number(workInput.value),
     short: Number(shortInput.value),
     long: Number(longInput.value),
+    cycle: Number(cycleInput.value),
   };
-  const invalidLabels = Object.entries(durations)
+  const fieldLabels = { work: MODES.work.label, short: MODES.short.label, long: MODES.long.label, cycle: "セット数" };
+  const invalidLabels = Object.entries(settings)
     .filter(([, value]) => !(value > 0))
-    .map(([mode]) => MODES[mode].label);
+    .map(([key]) => fieldLabels[key]);
   if (invalidLabels.length > 0) {
-    alert(`${invalidLabels.join("、")}に1分以上の値を入力してください`);
+    alert(`${invalidLabels.join("、")}に1以上の値を入力してください`);
     return;
   }
-  localStorage.setItem(SETTINGS_KEY, JSON.stringify(durations));
-  applyDurations(durations);
+  localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+  applySettings(settings);
   settingsPanel.hidden = true;
   setMode(currentMode);
 });
